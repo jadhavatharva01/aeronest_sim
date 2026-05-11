@@ -54,7 +54,47 @@ def test_drag_and_power_are_positive_for_level_flight(model: FixedWingModel) -> 
     assert model.power_required_w(speed) > 0.0
 
 
+def test_drag_coefficient_matches_parasite_plus_induced_drag(
+    model: FixedWingModel,
+) -> None:
+    cl = 1.05
+    expected = model.params.cd0 + cl**2 / (
+        math.pi * model.aspect_ratio * model.params.oswald_efficiency
+    )
+    assert model.drag_coefficient(cl) == pytest.approx(expected)
+
+
+def test_power_required_matches_drag_times_speed_over_prop_efficiency(
+    model: FixedWingModel,
+) -> None:
+    speed = 8.0
+    cl = model.lift_coefficient_for_level_flight(speed)
+    drag = model.drag_n(speed, cl)
+    expected = drag * speed / model.params.propeller_efficiency
+    assert model.power_required_w(speed) == pytest.approx(expected)
+
+
 def test_level_flight_cl_decreases_with_speed(model: FixedWingModel) -> None:
     low_speed_cl = model.lift_coefficient_for_level_flight(7.0)
     high_speed_cl = model.lift_coefficient_for_level_flight(10.0)
     assert high_speed_cl < low_speed_cl
+
+
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value"),
+    (
+        ("interference_factor", 0.0),
+        ("interference_factor", 1.1),
+        ("oswald_efficiency", 0.0),
+        ("oswald_efficiency", 1.1),
+        ("propeller_efficiency", 0.0),
+        ("propeller_efficiency", 1.1),
+    ),
+)
+def test_efficiency_like_parameters_must_be_in_unit_interval(
+    field_name: str,
+    invalid_value: float,
+) -> None:
+    kwargs = {field_name: invalid_value}
+    with pytest.raises(ValueError, match="greater than 0 and at most 1"):
+        FixedWingParameters(**kwargs)

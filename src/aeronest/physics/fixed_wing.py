@@ -29,16 +29,21 @@ class FixedWingParameters:
         for field_name in (
             "span_m",
             "chord_m",
-            "interference_factor",
             "mass_kg",
             "cl_max",
             "cd0",
-            "oswald_efficiency",
-            "propeller_efficiency",
             "gravity_m_s2",
         ):
             if getattr(self, field_name) <= 0.0:
                 raise ValueError(f"{field_name} must be positive")
+        for field_name in (
+            "interference_factor",
+            "oswald_efficiency",
+            "propeller_efficiency",
+        ):
+            value = getattr(self, field_name)
+            if not 0.0 < value <= 1.0:
+                raise ValueError(f"{field_name} must be greater than 0 and at most 1")
 
 
 @dataclass(frozen=True)
