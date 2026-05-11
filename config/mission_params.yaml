@@ -1,0 +1,6 @@
+mission:
+  docking_speed_factor: 1.25
+  docking_speed_warning_m_s: 8.0
+  docking_speed_target_band_m_s:
+    min: 6.5
+    max: 8.0

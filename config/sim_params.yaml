@@ -1,0 +1,7 @@
+simulation:
+  air_density_kg_m3: 1.20
+  speed_sweep_m_s:
+    min: 2.0
+    max: 16.0
+    count: 150
+  output_dir: outputs/phase_1

@@ -1,0 +1,11 @@
+fixed_wing_mothership:
+  n_wings: 3
+  span_m: 1.5
+  chord_m: 0.18
+  interference_factor: 0.75
+  mass_kg: 2.2
+  cl_max: 1.6
+  cd0: 0.055
+  oswald_efficiency: 0.78
+  propeller_efficiency: 0.62
+  gravity_m_s2: 9.80665
