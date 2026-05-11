@@ -9,3 +9,32 @@ fixed_wing_mothership:
   oswald_efficiency: 0.78
   propeller_efficiency: 0.62
   gravity_m_s2: 9.80665
+
+quadcopter:
+  mass_kg: 0.30
+  n_rotors: 4
+  rotor_diameter_m: 0.12
+  battery_voltage_nominal_v: 7.38
+  battery_capacity_ah: 2.45
+  usable_fraction: 0.80
+  eta_motor_prop: 0.50
+  avionics_power_w: 4.0
+  payload_power_w: 2.0
+  maneuver_factor: 1.25
+  reserve_fraction: 0.35
+  gravity_m_s2: 9.80665
+
+mothership_energy:
+  battery_capacity_wh: 150
+  avionics_power_w: 8
+  charge_power_w: 15
+  charge_efficiency: 0.85
+  fallback_propulsion_power_w: 55
+
+solar:
+  panel_area_m2: 0.35
+  panel_efficiency: 0.22
+  irradiance_w_m2: 800
+  sun_angle_factor: 0.75
+  shading_factor: 0.75
+  mppt_efficiency: 0.92

@@ -4,3 +4,16 @@ mission:
   docking_speed_target_band_m_s:
     min: 6.5
     max: 8.0
+
+phase_2:
+  preflight_min: 1.0
+  transit_min: 10.0
+  loiter_min: 2.0
+  deploy_min: 0.5
+  return_min: 2.0
+  docking_assumed_min: 0.5
+  redeploy_decision_min: 0.25
+  return_home_min: 10.0
+  max_duration_min: 180.0
+  dt_min: 0.25
+  max_deployment_cycles: 2

@@ -32,14 +32,29 @@ Phase 1 models the 1.5 m stacked-wing mothership using steady, level-flight appr
 
 These are early feasibility calculations, not a full 6-DOF simulator. The model assumes steady air density, symmetric wing loading, and no unsteady aerodynamic effects from docking, propwash, gusts, or wing-stack wake interactions beyond the configured interference factor.
 
+## Phase 2: Mission Energy Loop
+
+Phase 2 adds a DJI Mini-class quadcopter model and a mission-level battery simulation:
+
+- Quadcopter hover power uses ideal induced power over total rotor disk area.
+- Electrical hover power includes motor/prop efficiency losses and avionics load.
+- Flight power applies a maneuver factor and payload load.
+- Battery capacity is tracked in watt-hours with a configurable usable fraction.
+- Reserve-aware inspection time keeps a configured reserve fraction unused.
+- Mothership energy rate includes fixed-wing propulsion, avionics, charging load, and solar assist.
+- Solar power is an endurance assist term, not an infinite-flight assumption.
+
+The Phase 2 mission state machine includes transit, loiter, deployment, inspection, return, assumed docking, charging, redeploy/return decision, and return-home states. Docking is intentionally modeled as a successful placeholder event; the actual docking controller and animation are reserved for Phase 3.
+
 ## Run
 
 Use the existing virtual environment named `aeronest_env`; do not create a new one.
 
 ```bash
 source aeronest_env/bin/activate
-pytest
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest
 python scripts/run_phase_1_fixed_wing.py
+python scripts/run_phase_2_mission_energy.py
 ```
 
-Phase 1 plots are written to `outputs/phase_1/`.
+Phase 1 plots are written to `outputs/phase_1/`. Phase 2 plots are written to `outputs/phase_2/`.
