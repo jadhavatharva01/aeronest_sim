@@ -9,6 +9,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FFMpegWriter, FuncAnimation, PillowWriter
+from matplotlib.patches import Rectangle
 import numpy as np
 
 from aeronest.simulation.docking_sim import DockingResult
@@ -25,12 +26,6 @@ def save_docking_animation(result: DockingResult, output_dir: Path) -> list[Path
     ax.set_ylabel("z position (m)")
     ax.set_title("Phase 3 Docking Animation")
 
-    x_min = float(min(result.mothership_position_m[:, 0].min(), result.quad_position_m[:, 0].min())) - 1.0
-    x_max = float(max(result.mothership_position_m[:, 0].max(), result.quad_position_m[:, 0].max())) + 1.0
-    z_min = -0.5
-    z_max = float(max(result.quad_position_m[:, 1].max(), 1.5)) + 0.5
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(z_min, z_max)
     ax.grid(True, alpha=0.25)
 
     mothership, = ax.plot([], [], "s", color="tab:blue", markersize=9, label="Mothership")
@@ -38,8 +33,29 @@ def save_docking_animation(result: DockingResult, output_dir: Path) -> list[Path
     quad, = ax.plot([], [], "o", color="tab:orange", markersize=7, label="Quadcopter")
     trail, = ax.plot([], [], "-", color="tab:orange", alpha=0.45, linewidth=1)
     rel_line, = ax.plot([], [], "--", color="tab:gray", linewidth=1)
+    envelope = Rectangle(
+        (0.0, 0.0),
+        0.2,
+        0.1,
+        fill=False,
+        edgecolor="tab:green",
+        linewidth=1.5,
+        linestyle="--",
+        label="Capture envelope",
+    )
+    ax.add_patch(envelope)
     text = ax.text(0.02, 0.95, "", transform=ax.transAxes, va="top")
     ax.legend(loc="lower right")
+
+    relative_speed = np.linalg.norm(result.relative_velocity_m_s, axis=1)
+    inside_capture = (
+        (np.abs(result.relative_position_m[:, 0]) < 0.10)
+        & (np.abs(result.relative_position_m[:, 1]) < 0.05)
+        & (relative_speed < 0.25)
+    )
+    success_frame = None
+    if result.success and inside_capture.any():
+        success_frame = int(np.flatnonzero(inside_capture)[0])
 
     frame_step = max(1, len(result.time_s) // 160)
     frame_indices = np.arange(0, len(result.time_s), frame_step)
@@ -51,20 +67,32 @@ def save_docking_animation(result: DockingResult, output_dir: Path) -> list[Path
         q = result.quad_position_m[frame_index]
         mothership.set_data([m[0]], [m[1]])
         pad.set_data([m[0] - 0.2, m[0] + 0.2], [m[1], m[1]])
+        envelope.set_xy((m[0] - 0.10, m[1] - 0.05))
         quad.set_data([q[0]], [q[1]])
-        start = max(0, frame_index - 80)
+        start = max(0, frame_index - 30)
         trail.set_data(
             result.quad_position_m[start : frame_index + 1, 0],
             result.quad_position_m[start : frame_index + 1, 1],
         )
         rel_line.set_data([m[0], q[0]], [m[1], q[1]])
+        center_x = 0.5 * (m[0] + q[0])
+        center_z = 0.5 * (m[1] + q[1])
+        half_width = max(2.0, abs(q[0] - m[0]) + 1.0)
+        half_height = max(1.0, abs(q[1] - m[1]) + 0.7)
+        ax.set_xlim(center_x - half_width, center_x + half_width)
+        ax.set_ylim(center_z - half_height, center_z + half_height)
         rel_error = np.linalg.norm(result.relative_position_m[frame_index])
-        label = "SUCCESS" if result.success else f"FAIL: {result.abort_reason}"
+        if success_frame is not None and frame_index >= success_frame:
+            label = "SUCCESS"
+        elif not result.success and frame_index == len(result.time_s) - 1:
+            label = f"FAILURE: {result.abort_reason}"
+        else:
+            label = "APPROACHING"
         text.set_text(
             f"t = {result.time_s[frame_index]:.2f} s\n"
             f"relative error = {rel_error:.2f} m\n{label}"
         )
-        return mothership, pad, quad, trail, rel_line, text
+        return mothership, pad, quad, trail, rel_line, envelope, text
 
     animation = FuncAnimation(
         fig,

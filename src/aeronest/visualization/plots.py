@@ -106,6 +106,22 @@ def save_phase_3_docking_plots(
         label="Mothership",
     )
     ax.plot(result.quad_position_m[:, 0], result.quad_position_m[:, 1], label="Quad")
+    ax.scatter(
+        result.quad_position_m[0, 0],
+        result.quad_position_m[0, 1],
+        marker="o",
+        color="tab:green",
+        label="Quad start",
+        zorder=3,
+    )
+    ax.scatter(
+        result.quad_position_m[-1, 0],
+        result.quad_position_m[-1, 1],
+        marker="x",
+        color="tab:red",
+        label="Touchdown/final",
+        zorder=3,
+    )
     ax.set_xlabel("x position (m)")
     ax.set_ylabel("z position (m)")
     ax.set_title("Phase 3 Docking Trajectory")
@@ -122,6 +138,10 @@ def save_phase_3_docking_plots(
     ax.plot(result.time_s, result.relative_position_m[:, 0], label="x error")
     ax.plot(result.time_s, result.relative_position_m[:, 1], label="z error")
     ax.plot(result.time_s, error_norm, label="error norm")
+    ax.axhline(0.10, color="tab:blue", linestyle=":", label="x success threshold")
+    ax.axhline(-0.10, color="tab:blue", linestyle=":")
+    ax.axhline(0.05, color="tab:orange", linestyle=":", label="z success threshold")
+    ax.axhline(-0.05, color="tab:orange", linestyle=":")
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Relative position (m)")
     ax.set_title("Phase 3 Relative Error vs Time")
@@ -139,6 +159,15 @@ def save_phase_3_docking_plots(
     ax.plot(result.time_s, result.relative_velocity_m_s[:, 1], label="z relative velocity")
     ax.plot(result.time_s, velocity_norm, label="relative speed")
     ax.axhline(0.25, color="black", linestyle="--", label="capture limit")
+    below_capture = np.flatnonzero(velocity_norm < 0.25)
+    if len(below_capture) > 0:
+        first_index = int(below_capture[0])
+        ax.axvline(
+            result.time_s[first_index],
+            color="tab:green",
+            linestyle=":",
+            label="first below capture limit",
+        )
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Relative velocity (m/s)")
     ax.set_title("Phase 3 Relative Velocity vs Time")
